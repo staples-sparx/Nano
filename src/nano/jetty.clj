@@ -1,6 +1,6 @@
 (ns nano.jetty
   (:require [ring.util.servlet :as ring-servlet]
-            [ring.util.codec :as codec])
+            [nano.util :as util])
   (:import (javax.servlet.http HttpServletResponse HttpServletRequest)
            (org.eclipse.jetty.server Server ServerConnector Connector Request)
            (org.eclipse.jetty.server.handler AbstractHandler)
@@ -13,11 +13,10 @@
    :headers {"Content-Type" "text/plain"}
    :body (str "Server Error # " exception)})
 
-;; Get rid of codec/form-decode and can remove ring-core
 (defn- request-map [^HttpServletRequest request]
   {:remote-addr (.getRemoteAddr request)
    :uri (.getRequestURI request)
-   :query-params (some-> (.getQueryString request) (codec/form-decode "UTF-8"))
+   :query-params (some-> (.getQueryString request) (util/decode-params "UTF-8"))
    :request-method (keyword (.toLowerCase (.getMethod request)))
    :body (.getInputStream request)})
 
