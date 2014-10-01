@@ -50,7 +50,7 @@
                                            :port port)]
     (.start server)
     (try
-      (testing "Get Request with no parameters"
+      (testing "Get request with no parameters"
         (get-request! (str "http://localhost:" port "/route"))
         (is (= {:remote-addr "127.0.0.1"
                 :uri "/route"
@@ -58,7 +58,7 @@
                 :request-method :get
                 :body ""}
                @parsed-request)))
-      (testing "Get Request with parameter string"
+      (testing "Get request with parameter string"
         (get-request! (str "http://localhost:"
                            port
                            "/route?string"))
@@ -68,7 +68,7 @@
                 :request-method :get
                 :body ""}
                @parsed-request)))
-      (testing "Get Request with parameters"
+      (testing "Get request with parameters"
         (get-request! (str "http://localhost:"
                            port
                            "/route?first%2Dname=arthur&last%2Dname=dent"))
@@ -78,7 +78,7 @@
                 :request-method :get
                 :body ""}
                @parsed-request)))
-      (testing "Post Request with parameters"
+      (testing "Post request with parameters"
         (post-request! (str "http://localhost:"
                            port
                            "/route?first%2Dname=arthur&last%2Dname=dent")
@@ -88,6 +88,15 @@
                 :query-params {"first-name" "arthur" "last-name" "dent"}
                 :request-method :post
                 :body ""}
+               @parsed-request)))
+      (testing "Post request with parameters"
+        (post-request! (str "http://localhost:" port "/route")
+                       "{\"key\": \"value, \"key2\": \"value2\"}")
+        (is (= {:remote-addr "127.0.0.1"
+                :uri "/route"
+                :query-params nil
+                :request-method :post
+                :body "{\"key\": \"value, \"key2\": \"value2\"}"}
                @parsed-request)))
       (finally
         (.stop server)))))
