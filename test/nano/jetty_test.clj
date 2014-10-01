@@ -18,7 +18,16 @@
       (do (.close ss) port)
       (find-open-port))))
 
-(defn- post-request! [url-string body])
+(defn- post-request! [url-string body]
+  (let [^URL url (URL. url-string)
+        connection (doto ^HttpURLConnection (.openConnection url)
+                     (.setRequestMethod "GET")
+                     (.setDoOutput true))]
+    (doto (.getOutputStream connection)
+      (spit body))
+    {:status (.getResponseCode connection)
+     :headers (into {} (.getHeaderFields connection))
+     :body (slurp (.getInputStream connection))}))
 
 (defn- get-request! [url-string]
   (let [^URL url (URL. url-string)
@@ -67,6 +76,17 @@
                 :uri "/route"
                 :query-params {"first-name" "arthur" "last-name" "dent"}
                 :request-method :get
+                :body ""}
+               @parsed-request)))
+      (testing "Post Request with parameters"
+        (post-request! (str "http://localhost:"
+                           port
+                           "/route?first%2Dname=arthur&last%2Dname=dent")
+                       "")
+        (is (= {:remote-addr "127.0.0.1"
+                :uri "/route"
+                :query-params {"first-name" "arthur" "last-name" "dent"}
+                :request-method :post
                 :body ""}
                @parsed-request)))
       (finally

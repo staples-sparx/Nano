@@ -12,6 +12,7 @@
    :headers {"Content-Type" "text/plain"}
    :body (str "Server Error # " exception)})
 
+;; Get rid of codec/form-decode and can remove ring-core
 (defn- request-map [^HttpServletRequest request]
   {:remote-addr (.getRemoteAddr request)
    :uri (.getRequestURI request)
