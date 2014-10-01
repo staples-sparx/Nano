@@ -7,14 +7,18 @@
 
 (set! *warn-on-reflection* true)
 
-(defn request-map [^HttpServletRequest request]
+(defn- server-error [exception]
+  {:status 500
+   :body (str "Server Error # " exception)})
+
+(defn- request-map [^HttpServletRequest request]
   {:remote-addr (.getRemoteAddr request)
    :uri (.getRequestURI request)
    :query-params (codec/form-decode (.getQueryString request))
    :request-method (keyword (.toLowerCase (.getMethod request)))
    :body (.getInputStream request)})
 
-(defn- build-handler [clojure-handler]
+(defn- build-handler [clojure-handler exception-handler]
   (proxy [AbstractHandler] []
     (handle [_ ^Request base-request request response]
       (try
@@ -22,12 +26,15 @@
           (ring-servlet/update-servlet-response response clojure-reponse)
           (.setHandled base-request true))
         (catch Exception e
+          (let [exception-response (exception-handler e)])
           )))))
 
-(defn run-jetty [handler & {:keys [port] :or {port 80}}]
+(defn run-jetty
+  [handler & {:keys [port exception-handler]
+              :or {port 80 exception-handler server-error}}]
   (let [server (Server.)
         connector (doto ^Connector (ServerConnector. server) (.setPort port))
-        jetty-handler (build-handler handler)]
+        jetty-handler (build-handler handler error-handler)]
     (doto server
       (.addConnector connector)
       (.setHandler jetty-handler))))
