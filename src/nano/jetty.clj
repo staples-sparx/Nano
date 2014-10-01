@@ -9,6 +9,7 @@
 
 (defn- server-error [exception]
   {:status 500
+   :headers {"Content-Type" "text/plain"}
    :body (str "Server Error # " exception)})
 
 (defn- request-map [^HttpServletRequest request]
