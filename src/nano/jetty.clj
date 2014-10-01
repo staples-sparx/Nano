@@ -14,27 +14,26 @@
 (defn- request-map [^HttpServletRequest request]
   {:remote-addr (.getRemoteAddr request)
    :uri (.getRequestURI request)
-   :query-params (codec/form-decode (.getQueryString request))
+   :query-params (some-> (.getQueryString request) (codec/form-decode "UTF-8"))
    :request-method (keyword (.toLowerCase (.getMethod request)))
    :body (.getInputStream request)})
 
 (defn- build-handler [clojure-handler exception-handler]
   (proxy [AbstractHandler] []
     (handle [_ ^Request base-request request response]
-      (try
-        (let [clojure-reponse (clojure-handler (request-map request))]
-          (ring-servlet/update-servlet-response response clojure-reponse)
-          (.setHandled base-request true))
-        (catch Exception e
-          (let [exception-response (exception-handler e)])
-          )))))
+      (let [clojure-response (try
+                               (clojure-handler (request-map request))
+                               (catch Exception e
+                                 (exception-handler e)))]
+        (ring-servlet/update-servlet-response response clojure-response)
+        (.setHandled base-request true)))))
 
 (defn run-jetty
   [handler & {:keys [port exception-handler]
               :or {port 80 exception-handler server-error}}]
   (let [server (Server.)
         connector (doto ^Connector (ServerConnector. server) (.setPort port))
-        jetty-handler (build-handler handler error-handler)]
+        jetty-handler (build-handler handler exception-handler)]
     (doto server
       (.addConnector connector)
       (.setHandler jetty-handler))))
