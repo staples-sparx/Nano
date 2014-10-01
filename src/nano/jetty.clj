@@ -28,7 +28,7 @@
         (ring-servlet/update-servlet-response response clojure-response)
         (.setHandled base-request true)))))
 
-(defn run-jetty
+(defn create-jetty
   [handler & {:keys [port exception-handler]
               :or {port 80 exception-handler server-error}}]
   (let [server (Server.)
@@ -37,3 +37,9 @@
     (doto server
       (.addConnector connector)
       (.setHandler jetty-handler))))
+
+(defn run-jetty
+  [handler & options]
+  (doto ^Server (apply create-jetty handler options)
+    (.start)
+    (.join)))
