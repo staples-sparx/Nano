@@ -3,7 +3,8 @@
             [ring.util.codec :as codec])
   (:import (javax.servlet.http HttpServletResponse HttpServletRequest)
            (org.eclipse.jetty.server Server ServerConnector Connector Request)
-           (org.eclipse.jetty.server.handler AbstractHandler)))
+           (org.eclipse.jetty.server.handler AbstractHandler)
+           (org.eclipse.jetty.util.thread QueuedThreadPool)))
 
 (set! *warn-on-reflection* true)
 
@@ -31,9 +32,13 @@
         (.setHandled base-request true)))))
 
 (defn create-jetty
-  [handler & {:keys [port exception-handler]
-              :or {port 80 exception-handler server-error}}]
-  (let [server (Server.)
+  [handler & {:keys [port exception-handler max-threads min-threads]
+              :or {port 80
+                   exception-handler server-error
+                   max-threads 150
+                   min-threads 50}}]
+  (let [^QueuedThreadPool thread-pool (QueuedThreadPool. max-threads min-threads)
+        server (Server. thread-pool)
         connector (doto ^Connector (ServerConnector. server) (.setPort port))
         jetty-handler (build-handler handler exception-handler)]
     (doto server
