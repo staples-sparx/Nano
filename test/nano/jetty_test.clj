@@ -49,5 +49,25 @@
                 :request-method :get
                 :body ""}
                @parsed-request)))
+      (testing "Get Request with parameter string"
+        (get-request! (str "http://localhost:"
+                           port
+                           "/route?string"))
+        (is (= {:remote-addr "127.0.0.1"
+                :uri "/route"
+                :query-params "string"
+                :request-method :get
+                :body ""}
+               @parsed-request)))
+      (testing "Get Request with parameters"
+        (get-request! (str "http://localhost:"
+                           port
+                           "/route?first%2Dname=arthur&last%2Dname=dent"))
+        (is (= {:remote-addr "127.0.0.1"
+                :uri "/route"
+                :query-params {"first-name" "arthur" "last-name" "dent"}
+                :request-method :get
+                :body ""}
+               @parsed-request)))
       (finally
         (.stop server)))))
