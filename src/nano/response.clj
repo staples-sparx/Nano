@@ -7,5 +7,5 @@
 
 (defn method-not-supported [method]
   {:status 405
-   :body (str "The request method is not supported: " (name method))
+   :body (str "The request method is not supported: " (name (or method "nil")))
    :content-type "text/plain"})
