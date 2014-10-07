@@ -8,7 +8,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defn- server-error [exception]
+(defn- server-error [request exception]
   {:status 500
    :headers {"Content-Type" "text/plain"}
    :body (str "Server Error # " exception)})
@@ -23,10 +23,15 @@
 (defn- build-handler [clojure-handler exception-handler]
   (proxy [AbstractHandler] []
     (handle [_ ^Request base-request request response]
-      (let [clojure-response (try
-                               (clojure-handler (request-map request))
+      (let [clojure-request (try
+                              (request-map request)
+                              (catch Exception e
+                                (exception-handler
+                                  {:message "Exception while parsing request"} e)))
+            clojure-response (try
+                               (clojure-handler clojure-request)
                                (catch Exception e
-                                 (exception-handler e)))]
+                                 (exception-handler clojure-request e)))]
         (ring-servlet/update-servlet-response response clojure-response)
         (.setHandled base-request true)))))
 
