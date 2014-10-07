@@ -27,7 +27,7 @@
                               (request-map request)
                               (catch Exception e
                                 (exception-handler
-                                  {:message "Exception while parsing request"} e)))
+                                  {:ERROR "Exception while parsing request"} e)))
             clojure-response (try
                                (clojure-handler clojure-request)
                                (catch Exception e
