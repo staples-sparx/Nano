@@ -1,6 +1,6 @@
 (ns nano.log)
 
-(defn- value-with-times
+(defn value-with-times
   [thunk]
   (let [start (System/currentTimeMillis)
         start-us (/ (System/nanoTime) 1000)
