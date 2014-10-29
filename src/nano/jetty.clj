@@ -37,7 +37,7 @@
 
 (defn create-jetty
   [handler & {:keys [port exception-handler max-threads min-threads ^int acceptors ^int selectors]
-              :or {port 80
+              :or {port 8080
                    exception-handler server-error
                    max-threads 150
                    min-threads 50
