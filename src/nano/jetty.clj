@@ -36,7 +36,7 @@
         (.setHandled base-request true)))))
 
 (defn create-jetty
-  [handler & {:keys [port exception-handler max-threads min-threads acceptors selectors]
+  [handler & {:keys [port exception-handler max-threads min-threads ^int acceptors ^int selectors]
               :or {port 80
                    exception-handler server-error
                    max-threads 150
@@ -44,7 +44,7 @@
                    acceptors -1
                    selectors -1}}]
   (let [^QueuedThreadPool thread-pool (QueuedThreadPool. max-threads min-threads)
-        server (Server. thread-pool)
+        ^Server server (Server. thread-pool)
         jetty-handler (build-handler handler exception-handler)
         connector (doto ^Connector (ServerConnector. server acceptors selectors)
                     (.setPort port))]
