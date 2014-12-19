@@ -2,10 +2,10 @@
 
 (defmacro wrap-with-logging [log-fn request & body]
   `(let [start# (System/currentTimeMillis)
-         start-us# (/ (System/nanoTime) 1000)
+         start-nano# (System/nanoTime)
          reply# ~@body
          end# (System/currentTimeMillis)
-         elapsed# (/ (- (System/nanoTime) start-us#) 1000)]
+         elapsed# (/ (- (System/nanoTime) start-nano#) 1000)]
      (~log-fn {:request ~request
                :reply reply#
                :meta {:start (/ start# 1000000)
