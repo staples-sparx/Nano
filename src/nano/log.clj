@@ -10,5 +10,5 @@
                :reply reply#
                :meta {:start (/ start# 1000000)
                       :end (/ end# 1000000)
-                      :elapsed elapsed#}})
+                      :elapsed (long elapsed#)}})
      reply#))
