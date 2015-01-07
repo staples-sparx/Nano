@@ -1,4 +1,4 @@
-(defproject nano "0.2.0"
+(defproject nano "0.3.0"
   :description "A lightweight handler for Jetty 9"
   :url "https://github.com/StaplesLabs/nano"
   :license {:name "MIT License"
