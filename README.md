@@ -1,4 +1,4 @@
-# nano
+# Nano
 
 A Clojure library that implements an embedded Jetty 9 server and handler.
 
