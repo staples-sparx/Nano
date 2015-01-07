@@ -1,6 +1,6 @@
 (defproject nano "0.3.0"
   :description "A lightweight handler for Jetty 9"
-  :url "https://github.com/StaplesLabs/nano"
+  :url "https://github.com/StaplesLabs/Nano"
   :license {:name "MIT License"
             :url "http://mit-license.org/"}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]]}}
