@@ -5,5 +5,6 @@
             :url "http://mit-license.org/"}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]]}}
   :dependencies [[org.eclipse.jetty/jetty-server "9.2.3.v20140905"]
-                 [ring/ring-servlet "1.3.1"]]
+                 [ring/ring-servlet "1.3.1"]
+                 [bidi "1.12.0"]]
   :exclusions [org.clojure/clojure])
