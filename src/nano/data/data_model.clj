@@ -10,6 +10,7 @@
 
 (defprotocol IncrementalSettable
   (init-reload [this])
+  (cancel-reload [this])
   (complete-reload [this])
   (put-data [this data])
   (reload-started? [this]))
@@ -38,6 +39,9 @@
   (init-reload [_]
     (reset! reload-started? true)
     (reset! reload-state empty-collection))
+  (cancel-reload [_]
+    (reset! reload-started? false)
+    (reset! reload-state nil))
   (complete-reload [_]
     (reset! live-state @reload-state)
     (reset! reload-state nil)

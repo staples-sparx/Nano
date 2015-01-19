@@ -70,6 +70,17 @@
                             (name data-key)))))
       (response/method-not-supported method))))
 
+(defn- cancel-reload [key->data-model method data-key]
+  (let [data-key (keyword data-key)]
+    (if (= method :post)
+      (response data-key
+                (dc/cancel-reload key->data-model data-key)
+                (fn [_]
+                  (success-response
+                    (format "Data model \"%s\" ready to be loaded."
+                            (name data-key)))))
+      (response/method-not-supported method))))
+
 (defn complete-reload [key->data-model method data-key]
   (let [data-key (keyword data-key)]
     (if (= method :post)
@@ -113,6 +124,7 @@
         data-value (partial data-value key->data-model)
         list-keys (partial list-keys key->data-model)
         init-reload (partial init-reload key->data-model)
+        cancel-reload (partial cancel-reload key->data-model)
         complete-reload (partial complete-reload key->data-model)]
     (fn [{:keys [handler route-params]} {:keys [request-method body query-params]}]
       (let [data-key (:data-key route-params)
@@ -122,6 +134,7 @@
                        :list-keys (list-keys request-method data-key (get-key-vector route-params))
                        :init-reload (init-reload request-method (get query-params "data-key"))
                        :complete-reload (complete-reload request-method (get query-params "data-key"))
+                       :cancel-reload (cancel-reload request-method (get query-params "data-key"))
                        :data-value (data-value request-method
                                                data-key
                                                (get-key-vector route-params)))]
@@ -134,6 +147,7 @@
           [route-prefix {"" :list-data
                          "init-reload" :init-reload
                          "complete-reload" :complete-reload
+                         "cancel-reload" :cancel-reload
                          [[keyword :data-key]] {"" :data
                                                 "/" {"" :list-keys
                                                      [:key] {"" :data-value

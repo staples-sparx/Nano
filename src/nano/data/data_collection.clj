@@ -33,6 +33,15 @@
       :not-incremental)
     :unknown-data-model))
 
+(defn cancel-reload [coll data-model-key]
+  (if-let [data-model (get coll data-model-key)]
+    (if (dm/incremental? data-model)
+      (if (dm/reload-started? data-model)
+        (dm/cancel-reload data-model)
+        :reload-not-in-progress)
+      :not-incremental)
+    :unknown-data-model))
+
 (defn complete-reload [coll data-model-key]
   (if-let [data-model (get coll data-model-key)]
     (if (dm/incremental? data-model)
