@@ -9,11 +9,7 @@
   (valid-data? [this data]))
 
 (defprotocol IncrementalSettable
-  (init-reload [this])
-  (cancel-reload [this])
-  (complete-reload [this])
-  (put-data [this data])
-  (reload-started? [this]))
+  (put-data [this chunk-number data last?]))
 
 (deftype ReloadableDataModel [live-state set-fn validate-fn]
   Settable
@@ -28,26 +24,28 @@
   Settable
   (get-data [_] @live-state)
   (get-in-data [_ ks] (get-in @live-state ks))
-  (set-data [_ data] (reset! live-state data))
+  (set-data [_ data] (reset! live-state data) nil)
   (reloadable? [_] false)
   (incremental? [_] false)
   (valid-data? [_ _] true))
 
 (deftype IncrementalReloadableDataModel
-  [empty-collection live-state reload-state put-fn validate-fn reload-started?]
+  [empty-collection live-state reload-state put-fn validate-fn chunks-received]
   IncrementalSettable
-  (init-reload [_]
-    (reset! reload-started? true)
-    (reset! reload-state empty-collection))
-  (cancel-reload [_]
-    (reset! reload-started? false)
-    (reset! reload-state nil))
-  (complete-reload [_]
-    (reset! live-state @reload-state)
-    (reset! reload-state nil)
-    (reset! reload-started? false))
-  (put-data [_ data] (swap! reload-state put-fn data))
-  (reload-started? [_] @reload-started?)
+  (put-data [_ chunk-number data last?]
+    (when (== chunk-number 0)
+      (reset! reload-state empty-collection))
+    (swap! chunks-received conj chunk-number)
+    (swap! reload-state put-fn data)
+    (if last?
+      (if-let [missing (filter #(not (contains? @chunks-received %))
+                               (range (inc chunk-number)))]
+        {:chunk-number chunk-number
+         :missing-chunks missing}
+        (do (reset! live-state @reload-state)
+            (reset! reload-state nil)
+            {:chunk-number chunk-number}))
+      {:chunk-number chunk-number}))
   Settable
   (get-data [_] @live-state)
   (get-in-data [_ ks] (get-in @live-state ks))
@@ -62,7 +60,7 @@
                                     (atom nil)
                                     put-fn
                                     validate-fn
-                                    (atom false)))
+                                    (atom #{})))
 
 (defn reloadable-data-model
   ([] (reloadable-data-model (fn [_ data] data) (fn [_] true)))
