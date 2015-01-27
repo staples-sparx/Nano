@@ -44,6 +44,7 @@
          :missing-chunks missing}
         (do (reset! live-state @reload-state)
             (reset! reload-state nil)
+            (reset! chunks-received #{})
             {:chunk-number chunk-number}))
       {:chunk-number chunk-number}))
   Settable
