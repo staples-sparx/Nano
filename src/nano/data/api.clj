@@ -77,7 +77,7 @@
                 (dc/cancel-reload key->data-model data-key)
                 (fn [_]
                   (success-response
-                    (format "Data model \"%s\" ready to be loaded."
+                    (format "Data model \"%s\" reloading cancelled."
                             (name data-key)))))
       (response/method-not-supported method))))
 
