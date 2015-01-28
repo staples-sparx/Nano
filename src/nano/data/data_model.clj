@@ -9,7 +9,7 @@
   (valid-data? [this data]))
 
 (defprotocol IncrementalSettable
-  (put-data [this chunk-number data last?]))
+  (put-data [this chunk-number data final-chunk?]))
 
 (deftype ReloadableDataModel [live-state set-fn validate-fn]
   Settable
@@ -32,20 +32,21 @@
 (deftype IncrementalReloadableDataModel
   [empty-collection live-state reload-state put-fn validate-fn chunks-received]
   IncrementalSettable
-  (put-data [_ chunk-number data last?]
+  (put-data [_ chunk-number data final-chunk?]
     (when (== chunk-number 0)
       (reset! reload-state empty-collection))
     (swap! chunks-received conj chunk-number)
     (swap! reload-state put-fn data)
-    (if last?
-      (if-let [missing (filter #(not (contains? @chunks-received %))
-                               (range (inc chunk-number)))]
-        {:chunk-number chunk-number
-         :missing-chunks missing}
-        (do (reset! live-state @reload-state)
-            (reset! reload-state nil)
-            (reset! chunks-received #{})
-            {:chunk-number chunk-number}))
+    (if final-chunk?
+      (let [missing (filter #(not (contains? @chunks-received %))
+                            (range (inc chunk-number)))]
+        (if (empty? missing)
+          (do (reset! live-state @reload-state)
+              (reset! reload-state nil)
+              (reset! chunks-received #{})
+              {:chunk-number chunk-number})
+          {:chunk-number chunk-number
+           :missing-chunks missing}))
       {:chunk-number chunk-number}))
   Settable
   (get-data [_] @live-state)
