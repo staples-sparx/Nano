@@ -2,6 +2,8 @@
 
 A Clojure library that implements an embedded Jetty 9 server and handler.
 
+This library is pre-alpha. The api has not been finalized. Breaking changes are possible.
+
 ## Usage
 
 ```clj
