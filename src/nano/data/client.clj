@@ -70,8 +70,8 @@
             :success)
           :failure/complete-reload)))))
 
-(defn- incremental-load-data [ip port key chunk-vec & options]
-  (let [url (str "http://" ip ":" port "/data/" (name key))
+(defn incremental-load-data [data-url key chunk-vec & options]
+  (let [url (str data-url (name key))
         one-chunk? (== (count chunk-vec) 1)
         indices (range (count chunk-vec))]
     (if-not (try-request-repeatedly
