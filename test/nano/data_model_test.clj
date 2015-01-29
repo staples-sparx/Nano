@@ -66,7 +66,9 @@
            (:body (http/get route {:as :json}))))
     (is (= (dm/get-data (:sku data))
            (into {} (map (fn [[k v]] [(name k) v])
-                         (:body (http/get (str route "sku") {:as :json}))))))))
+                         (:body (http/get (str route "sku") {:as :json}))))))
+    (is (= (keys (dm/get-data (:sku data)))
+           (:body (http/get (str route "sku/") {:as :json-strict-string-keys}))))))
 
 (deftest reload-test
   (let [route (format "http://localhost:%s/data/" current-port)]
