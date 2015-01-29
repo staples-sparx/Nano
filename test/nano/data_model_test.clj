@@ -62,5 +62,7 @@
   (testing ""
     (let [route (format "http://localhost:%s/data/" current-port)]
       (is (= :success (client/incremental-load-data
-                        route :sku [{"2345" {:price 1 :cog 3}}])))
-      (is (= (dm/get-data (:sku data)) {"2345" {:price 1 :cog 3}})))))
+                        route :sku [{"2345" {:price 1 :cog 3}}
+                                    {"3456" {:price 2 :cog 4}}])))
+      (is (= (dm/get-data (:sku data)) {"2345" {:price 1 :cog 3}
+                                        "3456" {:price 2 :cog 4}})))))
