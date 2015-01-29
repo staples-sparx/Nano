@@ -10,8 +10,7 @@
 
 (defn- build-dm-documentation [name->dm]
   (into {} (map (fn [[k v]]
-                  [k {:reloadable? (dm/reloadable? v)
-                      :incremental? (dm/incremental? v)}])
+                  [k {:reloadable? (dm/reloadable? v)}])
                 name->dm)))
 
 (defn- success-response [body]

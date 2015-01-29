@@ -17,9 +17,7 @@
   (if-let [data-model (get coll data-model-key)]
     (if (dm/reloadable? data-model)
       (if (dm/valid-data? data-model data)
-        (if (dm/incremental? data-model)
-          (dm/put-data data-model chunk-number data final-chunk?)
-          (dm/set-data data-model data))
+        (dm/put-data data-model chunk-number data final-chunk?)
         :validate-failed)
       :model-cannot-be-set)
     :unknown-data-model))
