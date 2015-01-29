@@ -83,3 +83,8 @@
               options)
       :failure/init-reload
       (if one-chunk? :success (send-chunks url chunk-vec (rest indices) options)))))
+
+(defn load-data [data-url key data & options]
+  (if options
+    (incremental-load-data data-url key [data] options)
+    (incremental-load-data data-url key [data])))

@@ -58,9 +58,15 @@
 
 (use-fixtures :once fixtures)
 
-(deftest incremental-reload-test
-  (testing ""
-    (let [route (format "http://localhost:%s/data/" current-port)]
+(deftest reload-test
+  (let [route (format "http://localhost:%s/data/" current-port)]
+    (testing "Load"
+      (is (= :success (client/load-data
+                        route :sku {"2345" {:price 1 :cog 3}
+                                    "3456" {:price 2 :cog 4}})))
+      (is (= (dm/get-data (:sku data)) {"2345" {:price 1 :cog 3}
+                                        "3456" {:price 2 :cog 4}})))
+    (testing "Incremental load"
       (is (= :success (client/incremental-load-data
                         route :sku [{"2345" {:price 1 :cog 3}}
                                     {"3456" {:price 2 :cog 4}}])))
