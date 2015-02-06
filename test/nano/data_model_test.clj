@@ -1,6 +1,6 @@
 (ns nano.data-model-test
   (:use [clojure.test])
-  (:require [clojure.data.json :as json]
+  (:require [cheshire.core :as json]
             [clj-http.client :as http]
             [nano.data.client :as client]
             [nano.data.data-model :as dm]
@@ -37,7 +37,7 @@
 
 (defn- read-body [{:keys [request-method body] :as r}]
   (if (identical? :post request-method)
-    (assoc r :body (json/read-json (slurp body)))
+    (assoc r :body (json/parse-string (slurp body) true))
     r))
 
 (defn- fixtures [f]
@@ -47,7 +47,7 @@
                            (-> request
                                read-body
                                handler
-                               (update-in [:body] json/write-str)))
+                               (update-in [:body] json/generate-string)))
                          :port current-port
                          :acceptors 1
                          :exception-handler test-exception-handler)]
@@ -57,6 +57,9 @@
     (try (f)
          (catch Exception e (.printStackTrace e))
          (finally (.stop server)))))
+
+(defn- client-exception-handler [e]
+  (println (str (.printStackTrace ^Throwable e))))
 
 (use-fixtures :once fixtures)
 
@@ -81,6 +84,9 @@
     (testing "Incremental load"
       (is (= :success (client/incremental-load-data
                         route :sku [{"2345" {:price 1 :cog 3}}
-                                    {"3456" {:price 2 :cog 4}}])))
+                                    {"3456" {:price 2 :cog 4}}]
+                        :serialize-fn json/generate-string
+                        :deserialize-fn #(json/parse-string % true)
+                        :exception-handler client-exception-handler)))
       (is (= (dm/get-data (:sku data)) {"2345" {:price 1 :cog 3}
                                         "3456" {:price 2 :cog 4}})))))
