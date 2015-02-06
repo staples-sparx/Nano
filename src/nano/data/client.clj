@@ -70,7 +70,7 @@
             :success)
           :failure/complete-reload)))))
 
-(defn incremental-load-data [data-url key chunk-vec & options]
+(defn incremental-load-data [data-url key chunk-vec options]
   (let [url (str data-url (name key))
         one-chunk? (== (count chunk-vec) 1)
         indices (range (count chunk-vec))]
@@ -87,4 +87,4 @@
 (defn load-data [data-url key data & options]
   (if options
     (incremental-load-data data-url key [data] options)
-    (incremental-load-data data-url key [data])))
+    (incremental-load-data data-url key [data] nil)))
