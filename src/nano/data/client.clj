@@ -6,11 +6,10 @@
 
 (defn- submit-fn [request-fn {:keys [threadpool]}]
   (.submit ^ExecutorService (or threadpool default-threadpool)
-           ^Callable (cast Callable (request-fn))))
+           ^Callable (cast Callable request-fn)))
 
 (defn- try-request
   [url body {:keys [serialize-fn deserialize-fn exception-handler]}]
-  (println body)
   (if serialize-fn
     (try
       (let [response (-> (client/post url {:body (serialize-fn body)})
