@@ -2,14 +2,15 @@
   (:require [clj-http.client :as client])
   (:import (java.util.concurrent ExecutorService Executors)))
 
-(defonce ^:private threadpool (Executors/newCachedThreadPool))
+(defonce ^:private default-threadpool (Executors/newCachedThreadPool))
 
-(defn- submit-fn [request-fn]
-  (.submit ^ExecutorService threadpool
+(defn- submit-fn [request-fn {:keys [threadpool]}]
+  (.submit ^ExecutorService (or threadpool default-threadpool)
            ^Callable (cast Callable (request-fn))))
 
 (defn- try-request
   [url body {:keys [serialize-fn deserialize-fn exception-handler]}]
+  (println body)
   (if serialize-fn
     (try
       (let [response (-> (client/post url {:body (serialize-fn body)})
@@ -52,7 +53,7 @@
       :failure/attempts-exhausted
       (let [fs (for [i (butlast indices)
                      :let [chunk (nth chunks i)]]
-                 (submit-fn (request-fn url i chunk options)))
+                 (submit-fn (request-fn url i chunk options) options))
             final-chunk-num (last indices)
             final-chunk (nth chunks final-chunk-num)]
         (doseq [f fs] (deref f))
