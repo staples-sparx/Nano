@@ -55,9 +55,9 @@
     (success-response (build-dm-documentation key->data-model))
     (response/method-not-supported method)))
 
-(defn- data [key->data-model method data-key body]
+(defn- data [key->data-model method data-key keys body]
   (case method
-    :get (response data-key (dc/get-data key->data-model data-key) success-response)
+    :get (response data-key (dc/get-in-data key->data-model data-key keys) success-response)
     :post (response data-key
                     (dc/put-data key->data-model data-key body)
                     load-success-fn)
@@ -73,25 +73,16 @@
               success-response)
     (response/method-not-supported method)))
 
-(defn- data-value [key->data-model method data-key keys]
-  (if (= method :get)
-    (response data-key (dc/get-in-data key->data-model data-key keys) success-response)
-    (response/method-not-supported method)))
-
 (defn- build-dispatcher [key->data-model]
   (let [list-data (partial list-data key->data-model)
         data (partial data key->data-model)
-        data-value (partial data-value key->data-model)
         list-keys (partial list-keys key->data-model)]
     (fn [{:keys [handler route-params]} {:keys [request-method body]}]
       (let [data-key (:data-key route-params)
             response (case handler
                        :list-data (list-data request-method)
-                       :data (data request-method data-key body)
-                       :list-keys (list-keys request-method data-key (get-key-vector route-params))
-                       :data-value (data-value request-method
-                                               data-key
-                                               (get-key-vector route-params)))]
+                       :data (data request-method data-key (get-key-vector route-params) body)
+                       :list-keys (list-keys request-method data-key (get-key-vector route-params)))]
         response))))
 
 (defn generate-handler [route-prefix key->data-model]
@@ -101,9 +92,9 @@
           [route-prefix {"" :list-data
                          [[keyword :data-key]] {"" :data
                                                 "/" {"" :list-keys
-                                                     [:key] {"" :data-value
+                                                     [:key] {"" :data
                                                              "/" {"" :list-keys
-                                                                  [:key2] :data-value}}}}}])]
+                                                                  [:key2] :data}}}}}])]
     (fn [{:keys [uri] :as request}]
       (when-let [route-map (bidi/match-route data-routes uri)]
         (dispatcher route-map request)))))
