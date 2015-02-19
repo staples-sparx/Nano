@@ -16,12 +16,12 @@
 (defn- success-response [body]
   {:status 200
    :body body
-   :content-type "application/json"})
+   :headers {"Content-Type" "application/json"}})
 
 (defn- error-response [body]
   {:status 400
    :body body
-   :content-type "application/json"})
+   :headers {"Content-Type" "application/json"}})
 
 (defn- model-not-reloadable [data-key]
   (error-response {:message (format "Data model \"%s\" cannot be reloaded."
