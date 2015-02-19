@@ -16,10 +16,14 @@
   (every? (fn [[k v]] (and (contains? v :price)
                            (contains? v :cog))) data))
 
-(defn put-fn [data-model data]
+(defn- put-fn [data-model data]
   (merge data-model (into {} (map (fn [[k v]] [(name k) v]) data))))
 
-(def data {:sku (dm/reloadable-data-model {} put-fn validate)})
+(defonce reloaded? (atom false))
+
+(def data {:sku (dm/reloadable-data-model {} put-fn validate)
+           :sku-with-callback (dm/reloadable-data-model
+                                {} put-fn validate (fn [] (reset! reloaded? true)))})
 
 (defn- open-port []
   (let [port (rand-nth (range 60000 65535))
@@ -51,7 +55,9 @@
                          :port current-port
                          :acceptors 1
                          :exception-handler test-exception-handler)]
+    (reset! reloaded? false)
     (dm/set-data (:sku data) {"1234" {:price 10 :cog 4}})
+    (dm/set-data (:sku-with-callback data) {"1234" {:price 10 :cog 4}})
     (binding [*out* (clojure.java.io/writer (StringWriter.))]
       (.start server))
     (try (f)
@@ -65,7 +71,7 @@
 
 (deftest get-routes
   (let [route (format "http://localhost:%s/data/" current-port)]
-    (is (= {:sku {:reloadable? true}}
+    (is (= {:sku {:reloadable? true} :sku-with-callback {:reloadable? true}}
            (:body (http/get route {:as :json}))))
     (is (= (dm/get-data (:sku data))
            (into {} (map (fn [[k v]] [(name k) v])
@@ -89,4 +95,14 @@
                         :deserialize-fn #(json/parse-string % true)
                         :exception-handler client-exception-handler)))
       (is (= (dm/get-data (:sku data)) {"2345" {:price 1 :cog 3}
-                                        "3456" {:price 2 :cog 4}})))))
+                                        "3456" {:price 2 :cog 4}})))
+    (testing "Incremental load with callback"
+      (is (= :success (client/incremental-load-data
+                        route :sku-with-callback [{"2345" {:price 1 :cog 3}}
+                                                  {"3456" {:price 2 :cog 4}}]
+                        :serialize-fn json/generate-string
+                        :deserialize-fn #(json/parse-string % true)
+                        :exception-handler client-exception-handler)))
+      (is (= (dm/get-data (:sku-with-callback data)) {"2345" {:price 1 :cog 3}
+                                                      "3456" {:price 2 :cog 4}}))
+      (is @reloaded?))))

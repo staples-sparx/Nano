@@ -19,7 +19,13 @@
   (valid-data? [_ _] true))
 
 (deftype ReloadableDataModel
-  [empty-collection live-state reload-state put-fn validate-fn chunks-received]
+  [empty-collection
+   live-state
+   reload-state
+   put-fn
+   validate-fn
+   chunks-received
+   reload-callback]
   Reloadable
   (put-data [_ chunk-number data final-chunk?]
     (when (== chunk-number 0)
@@ -33,6 +39,7 @@
           (do (reset! live-state @reload-state)
               (reset! reload-state nil)
               (reset! chunks-received #{})
+              (when reload-callback (reload-callback))
               {:chunk-number chunk-number})
           {:chunk-number chunk-number
            :missing-chunks missing}))
@@ -47,12 +54,15 @@
 (defn reloadable-data-model
   ([] (reloadable-data-model nil (fn [_ data] data) (fn [_] true)))
   ([empty-collection put-fn validate-fn]
+    (reloadable-data-model empty-collection put-fn validate-fn nil))
+  ([empty-collection put-fn validate-fn reload-callback]
     (->ReloadableDataModel empty-collection
                            (atom nil)
                            (atom nil)
                            put-fn
                            validate-fn
-                           (atom #{}))))
+                           (atom #{})
+                           reload-callback)))
 
 (defn set-once-data-model []
   (->SetOnceDataModel (atom nil)))
