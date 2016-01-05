@@ -7,7 +7,6 @@
 (set! *warn-on-reflection* true)
 
 (def ^:private parsed-request (atom nil))
-(def ^:private port (atom nil))
 
 (defn find-open-port []
   (let [port (rand-nth (range 60000 65535))

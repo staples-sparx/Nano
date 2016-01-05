@@ -1,8 +1,8 @@
 (ns nano.jetty
   (:require [ring.util.servlet :as ring-servlet]
             [nano.util :as util])
-  (:import (javax.servlet.http HttpServletResponse HttpServletRequest)
-           (org.eclipse.jetty.server Server ServerConnector Connector Request)
+  (:import (javax.servlet.http HttpServletRequest)
+           (org.eclipse.jetty.server Server ServerConnector Request)
            (org.eclipse.jetty.server.handler AbstractHandler)
            (org.eclipse.jetty.util.thread QueuedThreadPool)))
 
@@ -46,7 +46,7 @@
   (let [^QueuedThreadPool thread-pool (QueuedThreadPool. max-threads min-threads)
         ^Server server (Server. thread-pool)
         jetty-handler (build-handler handler exception-handler)
-        connector (doto ^Connector (ServerConnector. server acceptors selectors)
+        connector (doto (ServerConnector. server acceptors selectors)
                     (.setPort port))]
     (doto server
       (.addConnector connector)
