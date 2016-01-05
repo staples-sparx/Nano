@@ -2,9 +2,14 @@
   (:require [ring.util.servlet :as ring-servlet]
             [nano.util :as util])
   (:import (javax.servlet.http HttpServletRequest)
-           (org.eclipse.jetty.server Server ServerConnector Request)
+           (org.eclipse.jetty.server Server ServerConnector
+                                     Request
+                                     HttpConfiguration
+                                     HttpConnectionFactory
+                                     ConnectionFactory)
            (org.eclipse.jetty.server.handler AbstractHandler)
-           (org.eclipse.jetty.util.thread QueuedThreadPool)))
+           (org.eclipse.jetty.util.thread QueuedThreadPool)
+           (org.eclipse.jetty.http2.server HTTP2CServerConnectionFactory)))
 
 (set! *warn-on-reflection* true)
 
@@ -35,6 +40,18 @@
         (ring-servlet/update-servlet-response response clojure-response)
         (.setHandled base-request true)))))
 
+(defn- build-connector [^Server server acceptors selectors port]
+  (let [http-config (HttpConfiguration.)
+        http1 (HttpConnectionFactory. http-config)
+        http2 (HTTP2CServerConnectionFactory. http-config)
+        factories (into-array ConnectionFactory [http1 http2])]
+    (doto (ServerConnector.
+            server
+            (int acceptors)
+            (int selectors)
+            ^"[Lorg.eclipse.jetty.server.ConnectionFactory;" factories)
+      (.setPort port))))
+
 (defn create-jetty
   [handler & {:keys [port exception-handler max-threads min-threads ^int acceptors ^int selectors]
               :or {port 8080
@@ -43,11 +60,10 @@
                    min-threads 50
                    acceptors -1
                    selectors -1}}]
-  (let [^QueuedThreadPool thread-pool (QueuedThreadPool. max-threads min-threads)
-        ^Server server (Server. thread-pool)
+  (let [thread-pool (QueuedThreadPool. max-threads min-threads)
+        server (Server. thread-pool)
         jetty-handler (build-handler handler exception-handler)
-        connector (doto (ServerConnector. server acceptors selectors)
-                    (.setPort port))]
+        connector (build-connector server acceptors selectors port)]
     (doto server
       (.addConnector connector)
       (.setHandler jetty-handler))))
