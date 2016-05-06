@@ -1,4 +1,4 @@
-(defproject org.sparx/nano "0.6.0"
+(defproject org.sparx/nano "0.6.1-SNAPSHOT"
   :description "A lightweight handler for Jetty 9"
   :url "https://github.com/staples-sparx/Nano"
   :license {:name "MIT License"
